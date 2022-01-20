@@ -18,13 +18,12 @@ function App() {
 
   const refreshData = () => {
     getData().then(res=>{
-      console.log(gridApi);
       gridApi.setRowData(res);
     });
   };
 
   const getData = () => {
-      return fetch('https://localhost:7079/Position/Get')
+      return fetch('https://aggridapi.azurewebsites.net/position/get')
         .then(result => result.json())
         .then(rowData => {return rowData});
   }
@@ -72,7 +71,6 @@ function App() {
 }
 
 function dateFormatter(params) {
-  console.log("Param",params.value);
   return moment(params.value).format('MM/DD/YYYY');
 }
 
