@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useState} from 'react';
 import {AgGridColumn, AgGridReact} from 'ag-grid-react';
 import moment from 'moment';
 import 'ag-grid-community/dist/styles/ag-grid.css';
@@ -6,38 +6,60 @@ import 'ag-grid-community/dist/styles/ag-theme-alpine.css';
 import './main.css';
 
 function App() {
-  const [rowData, setRowData] = useState([]);
+ 
+  const [gridApi, setGridApi] = useState(null);
 
-  useEffect(() => {
-       fetch('https://localhost:7079/Position/Get')
-       .then(result => result.json())
-       .then(rowData => setRowData(rowData))
-  }, []);
+  const onGridReady = (params) => {
+    setGridApi(params.api);       
+    getData().then(res=>{
+      params.api.setRowData(res);
+    });    
+  };
+
+  const refreshData = () => {
+    getData().then(res=>{
+      console.log(gridApi);
+      gridApi.setRowData(res);
+    });
+  };
+
+  const getData = () => {
+      return fetch('https://localhost:7079/Position/Get')
+        .then(result => result.json())
+        .then(rowData => {return rowData});
+  }
  
   return (
     <div className='container'>
       <h1 className='text-center'>AG Grid UX table</h1>
+      <button onClick={() => refreshData()}>
+           Refresh
+      </button>
       <div className="ag-theme-alpine" style={{height: "800px"}}>
       <AgGridReact
-          rowData={rowData}>
-          <AgGridColumn field="ticker"></AgGridColumn>
-          <AgGridColumn field="description"></AgGridColumn>
-          <AgGridColumn field="issuer"></AgGridColumn>
-          <AgGridColumn headerName="FM3 Strategy" field="fM3Strategy"></AgGridColumn>
-          <AgGridColumn headerName="AIM Strategy" field="aimStrategy"></AgGridColumn>
-          <AgGridColumn field="entity"></AgGridColumn>
-          <AgGridColumn field="position"></AgGridColumn>
-          <AgGridColumn field="positionStatus"></AgGridColumn>
-          <AgGridColumn field="securityType"></AgGridColumn>
-          <AgGridColumn field="maturityDate" valueFormatter={dateFormatter}></AgGridColumn>
-          <AgGridColumn field="coupon"></AgGridColumn>
-          <AgGridColumn field="unitCost"></AgGridColumn>
-          <AgGridColumn field="priorDayPrice"></AgGridColumn>
-          <AgGridColumn headerName="Last Price" field="lasT_PRICE"></AgGridColumn>
-          <AgGridColumn field="marketValue"></AgGridColumn>
-          <AgGridColumn field="dailyInterest"></AgGridColumn>
-          <AgGridColumn field="accrual"></AgGridColumn>
-          <AgGridColumn headerName="UD SPAC STATUS" field="uD_SPAC_STATUS"></AgGridColumn>
+          pagination={true}
+          rowData={[]}
+          enableCellChangeFlash={true}
+          onGridReady={onGridReady}
+          >
+          <AgGridColumn field="ticker" sortable={ true } filter={ true }></AgGridColumn>
+          <AgGridColumn field="description" sortable={ true } filter={ true }></AgGridColumn>
+          <AgGridColumn field="issuer" sortable={ true } filter={ true }></AgGridColumn>
+          <AgGridColumn headerName="FM3 Strategy" field="fM3Strategy" sortable={ true } filter={ true }></AgGridColumn>
+          <AgGridColumn headerName="AIM Strategy" field="aimStrategy" sortable={ true } filter={ true }></AgGridColumn>
+          <AgGridColumn field="entity" sortable={ true } filter={ true }></AgGridColumn>
+          <AgGridColumn field="position" sortable={ true } filter={ true }></AgGridColumn>
+          <AgGridColumn field="positionStatus" sortable={ true } filter={ true }></AgGridColumn>
+          <AgGridColumn field="securityType" sortable={ true } filter={ true }></AgGridColumn>
+          <AgGridColumn field="maturityDate" valueFormatter={dateFormatter} sortable={ true } filter={ true }></AgGridColumn>
+          <AgGridColumn field="coupon" sortable={ true } filter={ true }></AgGridColumn>
+          <AgGridColumn field="unitCost" sortable={ true } filter={ true }></AgGridColumn>
+          <AgGridColumn field="priorDayPrice" sortable={ true } filter={ true }></AgGridColumn>
+          <AgGridColumn headerName="Last Price" field="lasT_PRICE" sortable={ true } filter={ true }></AgGridColumn>
+          <AgGridColumn field="marketValue" sortable={ true } filter={ true }></AgGridColumn>
+          <AgGridColumn field="dailyInterest" sortable={ true } filter={ true }></AgGridColumn>
+          <AgGridColumn field="accrual" sortable={ true } filter={ true }></AgGridColumn>
+          <AgGridColumn headerName="UD SPAC STATUS" field="uD_SPAC_STATUS" sortable={ true } filter={ true }></AgGridColumn>
           <AgGridColumn field="dailyPnL"></AgGridColumn>
           <AgGridColumn headerName="MTD PnL" field="mtdPnL"></AgGridColumn>
           <AgGridColumn headerName="QTD PnL" field="qtdPnL"></AgGridColumn>
