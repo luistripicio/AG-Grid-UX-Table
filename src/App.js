@@ -32,6 +32,7 @@ function App() {
 
   const getData = () => {
       fetch('https://aggridapi.azurewebsites.net/position/get')
+      //fetch('https://localhost:7079/position/get')
         .then(result => result.json())
         .then(rowData => {
           setRowData(rowData);
@@ -41,6 +42,7 @@ function App() {
   return (
     <div style={{width: '100%', height: '100%'}} className='container'>
       <h1 className='text-center'>AG Grid UX table</h1>
+      <p className='text-center'><strong>Dragable columns: AIM Strategy, Entity</strong></p>
       <div  id="myGrid" className="ag-theme-alpine-dark" style={{width:'100%',height: "650px"}}>
       <AgGridReact
           defaultColDef={{
@@ -51,6 +53,12 @@ function App() {
           }}
           defaultColGroupDef={{ marryChildren: true }}
           autoGroupColumnDef={{ minWidth: 100 }}
+          autoGroupColumnDef={{ minWidth: 200 }}
+          suppressDragLeaveHidesColumns={true}
+          suppressMakeColumnVisibleAfterUnGroup={true}
+          rowGroupPanelShow={'always'}
+          groupIncludeFooter={true}
+          groupIncludeTotalFooter={true}
           columnTypes={{
             quarterFigure: {
               editable: true,
@@ -93,13 +101,23 @@ function App() {
           animateRows={true}
           onGridReady={onGridReady}
           onCellValueChanged={onCellValueChanged}
-          >          
+          > 
+          <AgGridColumn
+            headerName="PnL Total"
+            type="totalColumn"
+            aggFunc="sum"
+            valueGetter={"getValue('mtdPnL') + getValue('qtdPnL') + getValue('ytdPnL') + getValue('ltdPnL')"} 
+          />
+          <AgGridColumn headerName="MTD PnL" field="mtdPnL" aggFunc="sum"></AgGridColumn>
+          <AgGridColumn headerName="QTD PnL" field="qtdPnL" aggFunc="sum"></AgGridColumn>
+          <AgGridColumn headerName="YTD PnL" field="ytdPnL" aggFunc="sum"></AgGridColumn>
+          <AgGridColumn headerName="LTD PnL" field="ltdPnL" aggFunc="sum"></AgGridColumn>          
           <AgGridColumn field="ticker" ></AgGridColumn>
           <AgGridColumn field="description" ></AgGridColumn>
           <AgGridColumn field="issuer" ></AgGridColumn>
-          <AgGridColumn headerName="FM3 Strategy" field="fM3Strategy" ></AgGridColumn>
-          <AgGridColumn headerName="AIM Strategy" field="aimStrategy" ></AgGridColumn>
-          <AgGridColumn field="entity" ></AgGridColumn>
+          <AgGridColumn headerName="FM3 Strategy" field="fM3Strategy"></AgGridColumn>
+          <AgGridColumn headerName="AIM Strategy" field="aimStrategy" enableRowGroup={true}></AgGridColumn>
+          <AgGridColumn field="entity" enableRowGroup={true}></AgGridColumn>
           <AgGridColumn field="position" ></AgGridColumn>
           <AgGridColumn field="positionStatus" ></AgGridColumn>
           <AgGridColumn field="securityType" ></AgGridColumn>
@@ -112,16 +130,7 @@ function App() {
           <AgGridColumn field="dailyInterest" ></AgGridColumn>
           <AgGridColumn field="accrual" ></AgGridColumn>
           <AgGridColumn headerName="UD SPAC STATUS" field="uD_SPAC_STATUS" ></AgGridColumn>
-          <AgGridColumn field="dailyPnL"></AgGridColumn>
-          <AgGridColumn headerName="MTD PnL" field="mtdPnL" type="numberColumn"></AgGridColumn>
-          <AgGridColumn headerName="QTD PnL" field="qtdPnL" type="numberColumn"></AgGridColumn>
-          <AgGridColumn headerName="YTD PnL" field="ytdPnL" type="numberColumn"></AgGridColumn>
-          <AgGridColumn headerName="LTD PnL" field="ltdPnL" type="numberColumn"></AgGridColumn>
-          <AgGridColumn
-            headerName="Total"
-            type="totalColumn"
-            valueGetter="getValue('mtdPnL') + getValue('qtdPnL') + getValue('ytdPnL') + getValue('ltdPnL')"
-          />          
+          <AgGridColumn field="dailyPnL"></AgGridColumn>         
       </AgGridReact>
   </div>      
     </div>
