@@ -1,77 +1,140 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {AgGridColumn, AgGridReact} from 'ag-grid-react';
-import moment from 'moment';
+import 'ag-grid-enterprise';
+import {formatNumber, dateFormatter} from './utls/hook.js';
 import 'ag-grid-community/dist/styles/ag-grid.css';
-import 'ag-grid-community/dist/styles/ag-theme-alpine.css';
+import 'ag-grid-community/dist/styles/ag-theme-alpine-dark.css';
 import './main.css';
+
 
 function App() {
  
+
+  const [tableFontSize, setTableFontSize] = useState('14px');
+
   const [gridApi, setGridApi] = useState(null);
+  const [gridColumnApi, setGridColumnApi] = useState(null);
+  const [rowData, setRowData] = useState(null);
+
+  useEffect(()=>{
+    getData();
+  });
 
   const onGridReady = (params) => {
-    setGridApi(params.api);       
-    getData().then(res=>{
-      params.api.setRowData(res);
-    });    
+    setGridApi(params.api);
+    setGridColumnApi(params.columnApi);
   };
 
-  const refreshData = () => {
-    getData().then(res=>{
-      gridApi.setRowData(res);
-    });
+  const onCellValueChanged = (params) => {
+    var changedData = [params.data];
+    params.api.applyTransaction({ update: changedData });
   };
 
   const getData = () => {
-      return fetch('https://aggridapi.azurewebsites.net/position/get')
+      fetch('https://aggridapi.azurewebsites.net/position/get')
+      //fetch('https://localhost:7079/position/get')
         .then(result => result.json())
-        .then(rowData => {return rowData});
+        .then(rowData => {
+          setRowData(rowData);
+      });
   }
- 
+
   return (
-    <div className='container'>
+    <div style={{width: '100%', height: '100%'}} className='container'>
       <h1 className='text-center'>AG Grid UX table</h1>
-      <button onClick={() => refreshData()}>
-           Refresh
-      </button>
-      <div className="ag-theme-alpine" style={{height: "800px"}}>
+      <p className='text-center'><strong>Dragable columns: AIM Strategy, Entity</strong></p>
+      <div  id="myGrid" className="ag-theme-alpine-dark" style={{width:'100%',height: "650px"}}>
       <AgGridReact
+          defaultColDef={{
+            resizable: true,
+            sortable: true,
+            filter: 'agTextColumnFilter',
+            floatingFilter: true,
+          }}
+          defaultColGroupDef={{ marryChildren: true }}
+          autoGroupColumnDef={{ minWidth: 100 }}
+          autoGroupColumnDef={{ minWidth: 200 }}
+          suppressDragLeaveHidesColumns={true}
+          suppressMakeColumnVisibleAfterUnGroup={true}
+          rowGroupPanelShow={'always'}
+          groupIncludeFooter={true}
+          groupIncludeTotalFooter={true}
+          columnTypes={{
+            quarterFigure: {
+              editable: true,
+              cellClass: 'number-cell',
+              aggFunc: 'sum',
+              valueFormatter: formatNumber,
+              valueParser: function numberParser(params) {
+                return Number(params.newValue);
+              },
+            },
+          }}
+          columnTypes={{
+            numberColumn: {
+              width: 130,
+              filter: 'agNumberColumnFilter',
+            },
+            dateColumn: {
+              filter: 'agDateColumnFilter',
+              filterParams: {
+                comparator: (filterLocalDateAtMidnight, cellValue) => {
+                  const dateParts = cellValue.split('/');
+                  const day = Number(dateParts[0]);
+                  const month = Number(dateParts[1]) - 1;
+                  const year = Number(dateParts[2]);
+                  const cellDate = new Date(year, month, day);
+                  if (cellDate < filterLocalDateAtMidnight) {
+                    return -1;
+                  } else if (cellDate > filterLocalDateAtMidnight) {
+                    return 1;
+                  } else {
+                    return 0;
+                  }
+                },
+              },
+            },
+          }}                    
           pagination={true}
-          rowData={[]}
-          enableCellChangeFlash={true}
+          rowData={rowData}
+          suppressAggFuncInHeader={true}
+          animateRows={true}
           onGridReady={onGridReady}
-          >
-          <AgGridColumn field="ticker" sortable={ true } filter={ true }></AgGridColumn>
-          <AgGridColumn field="description" sortable={ true } filter={ true }></AgGridColumn>
-          <AgGridColumn field="issuer" sortable={ true } filter={ true }></AgGridColumn>
-          <AgGridColumn headerName="FM3 Strategy" field="fM3Strategy" sortable={ true } filter={ true }></AgGridColumn>
-          <AgGridColumn headerName="AIM Strategy" field="aimStrategy" sortable={ true } filter={ true }></AgGridColumn>
-          <AgGridColumn field="entity" sortable={ true } filter={ true }></AgGridColumn>
-          <AgGridColumn field="position" sortable={ true } filter={ true }></AgGridColumn>
-          <AgGridColumn field="positionStatus" sortable={ true } filter={ true }></AgGridColumn>
-          <AgGridColumn field="securityType" sortable={ true } filter={ true }></AgGridColumn>
-          <AgGridColumn field="maturityDate" valueFormatter={dateFormatter} sortable={ true } filter={ true }></AgGridColumn>
-          <AgGridColumn field="coupon" sortable={ true } filter={ true }></AgGridColumn>
-          <AgGridColumn field="unitCost" sortable={ true } filter={ true }></AgGridColumn>
-          <AgGridColumn field="priorDayPrice" sortable={ true } filter={ true }></AgGridColumn>
-          <AgGridColumn headerName="Last Price" field="lasT_PRICE" sortable={ true } filter={ true }></AgGridColumn>
-          <AgGridColumn field="marketValue" sortable={ true } filter={ true }></AgGridColumn>
-          <AgGridColumn field="dailyInterest" sortable={ true } filter={ true }></AgGridColumn>
-          <AgGridColumn field="accrual" sortable={ true } filter={ true }></AgGridColumn>
-          <AgGridColumn headerName="UD SPAC STATUS" field="uD_SPAC_STATUS" sortable={ true } filter={ true }></AgGridColumn>
-          <AgGridColumn field="dailyPnL"></AgGridColumn>
-          <AgGridColumn headerName="MTD PnL" field="mtdPnL"></AgGridColumn>
-          <AgGridColumn headerName="QTD PnL" field="qtdPnL"></AgGridColumn>
-          <AgGridColumn headerName="YTD PnL" field="ytdPnL"></AgGridColumn>
-          <AgGridColumn headerName="LTD PnL" field="ltdPnL"></AgGridColumn>
+          onCellValueChanged={onCellValueChanged}
+          > 
+          <AgGridColumn
+            headerName="PnL Total"
+            type="totalColumn"
+            aggFunc="sum"
+            valueGetter={"getValue('mtdPnL') + getValue('qtdPnL') + getValue('ytdPnL') + getValue('ltdPnL')"} 
+          />
+          <AgGridColumn headerName="MTD PnL" field="mtdPnL" aggFunc="sum"></AgGridColumn>
+          <AgGridColumn headerName="QTD PnL" field="qtdPnL" aggFunc="sum"></AgGridColumn>
+          <AgGridColumn headerName="YTD PnL" field="ytdPnL" aggFunc="sum"></AgGridColumn>
+          <AgGridColumn headerName="LTD PnL" field="ltdPnL" aggFunc="sum"></AgGridColumn>          
+          <AgGridColumn field="ticker" ></AgGridColumn>
+          <AgGridColumn field="description" ></AgGridColumn>
+          <AgGridColumn field="issuer" ></AgGridColumn>
+          <AgGridColumn headerName="FM3 Strategy" field="fM3Strategy"></AgGridColumn>
+          <AgGridColumn headerName="AIM Strategy" field="aimStrategy" enableRowGroup={true}></AgGridColumn>
+          <AgGridColumn field="entity" enableRowGroup={true}></AgGridColumn>
+          <AgGridColumn field="position" ></AgGridColumn>
+          <AgGridColumn field="positionStatus" ></AgGridColumn>
+          <AgGridColumn field="securityType" ></AgGridColumn>
+          <AgGridColumn field="maturityDate" valueFormatter={dateFormatter} type="dateColumn" ></AgGridColumn>
+          <AgGridColumn field="coupon" ></AgGridColumn>
+          <AgGridColumn field="unitCost" ></AgGridColumn>
+          <AgGridColumn field="priorDayPrice" ></AgGridColumn>
+          <AgGridColumn headerName="Last Price" field="lasT_PRICE" ></AgGridColumn>
+          <AgGridColumn field="marketValue" ></AgGridColumn>
+          <AgGridColumn field="dailyInterest" ></AgGridColumn>
+          <AgGridColumn field="accrual" ></AgGridColumn>
+          <AgGridColumn headerName="UD SPAC STATUS" field="uD_SPAC_STATUS" ></AgGridColumn>
+          <AgGridColumn field="dailyPnL"></AgGridColumn>         
       </AgGridReact>
   </div>      
     </div>
   );
-}
-
-function dateFormatter(params) {
-  return moment(params.value).format('MM/DD/YYYY');
 }
 
 export default App;
