@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {AgGridColumn, AgGridReact} from 'ag-grid-react';
 import 'ag-grid-enterprise';
-import {formatNumber, dateFormatter} from './utls/hook.js';
+import {dateFormatter} from './utls/hook.js';
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-alpine-dark.css';
 import './main.css';
@@ -9,8 +9,7 @@ import './main.css';
 
 function App() {
  
-
-  const [tableFontSize, setTableFontSize] = useState('14px');
+  // const [tableFontSize, setTableFontSize] = useState('14px');
 
   const [gridApi, setGridApi] = useState(null);
   const [gridColumnApi, setGridColumnApi] = useState(null);
@@ -53,23 +52,11 @@ function App() {
           }}
           defaultColGroupDef={{ marryChildren: true }}
           autoGroupColumnDef={{ minWidth: 100 }}
-          autoGroupColumnDef={{ minWidth: 200 }}
           suppressDragLeaveHidesColumns={true}
           suppressMakeColumnVisibleAfterUnGroup={true}
           rowGroupPanelShow={'always'}
           groupIncludeFooter={true}
           groupIncludeTotalFooter={true}
-          columnTypes={{
-            quarterFigure: {
-              editable: true,
-              cellClass: 'number-cell',
-              aggFunc: 'sum',
-              valueFormatter: formatNumber,
-              valueParser: function numberParser(params) {
-                return Number(params.newValue);
-              },
-            },
-          }}
           columnTypes={{
             numberColumn: {
               width: 130,
@@ -104,9 +91,7 @@ function App() {
           > 
           <AgGridColumn
             headerName="PnL Total"
-            type="totalColumn"
             aggFunc="sum"
-            valueGetter={"getValue('mtdPnL') + getValue('qtdPnL') + getValue('ytdPnL') + getValue('ltdPnL')"} 
           />
           <AgGridColumn headerName="MTD PnL" field="mtdPnL" aggFunc="sum"></AgGridColumn>
           <AgGridColumn headerName="QTD PnL" field="qtdPnL" aggFunc="sum"></AgGridColumn>
